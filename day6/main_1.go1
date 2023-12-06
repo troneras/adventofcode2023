@@ -1,0 +1,82 @@
+package main
+
+import (
+	"bytes"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
+type Race struct {
+	time     int
+	distance int
+}
+
+func main() {
+	body, err := os.ReadFile("input.txt")
+
+	if err != nil {
+		panic(err)
+	}
+
+	lines := bytes.Split(body, []byte("\n"))
+
+	times, _ := byteArrayToIntArray(bytes.Split(lines[0], []byte(":"))[1])
+	distances, _ := byteArrayToIntArray(bytes.Split(lines[1], []byte(":"))[1])
+
+	races := []Race{}
+
+	for i := 0; i < len(times); i++ {
+		races = append(races, Race{time: times[i], distance: distances[i]})
+	}
+
+	// for each race find the speed that beats the distance in the time.
+	// speed * time2 = distance + 1
+	// time2 = 1
+	// 0 < time2 < time
+	// time2 >= distance - time
+
+	var racewins = [][]int{}
+	var winners []int
+	for _, race := range races {
+		fmt.Println("race", race)
+		winners = []int{}
+		for time := race.time - 1; time > 0; time-- {
+			speed := race.time - time
+			remaining := race.time - speed
+			distance := speed * remaining
+
+			// fmt.Println("speed", speed, "remaining", remaining, "distance", distance, "race-distance", race.distance)
+
+			if distance > race.distance {
+				winners = append(winners, time)
+			}
+
+		}
+		racewins = append(racewins, winners)
+	}
+
+	fmt.Println(racewins)
+
+	total := 1
+	for _, result := range racewins {
+		total *= len(result)
+	}
+
+	fmt.Println(total)
+
+}
+
+func byteArrayToIntArray(byteArray []byte) ([]int, error) {
+	strArray := strings.Fields(string(byteArray))
+	intArray := make([]int, len(strArray))
+	for i, str := range strArray {
+		num, err := strconv.Atoi(str)
+		if err != nil {
+			return nil, err
+		}
+		intArray[i] = num
+	}
+	return intArray, nil
+}
