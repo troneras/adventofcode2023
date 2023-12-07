@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	fiveOfAKind  = 1
-	fourOfAKind  = 2
-	fullHouse    = 3
+	fiveOfAKind  = 7
+	fourOfAKind  = 6
+	fullHouse    = 5
 	threeOfAKind = 4
-	twoPairs     = 5
-	onePair      = 6
-	highCard     = 7
+	twoPairs     = 3
+	onePair      = 2
+	highCard     = 1
 )
 
 type Hand struct {
@@ -43,7 +43,7 @@ func (a ByKind) Less(i, j int) bool {
 
 	}
 
-	return a[i].kind > a[j].kind
+	return a[i].kind < a[j].kind
 
 }
 
@@ -82,28 +82,46 @@ func getHand(line []byte) Hand {
 	hand.cards = line[0:5]
 	hand.bid, _ = strconv.Atoi(string(line[6:]))
 	hand.rank = 0
-	hand.kind = getKind(hand.cards)
+
+	num_jokers := bytes.Count(hand.cards, []byte{'J'})
+	if num_jokers == 5 {
+		hand.kind = fiveOfAKind
+		return hand
+	}
+	cards := bytes.ReplaceAll(hand.cards, []byte{'J'}, []byte{})
+
+	_, card := getKind(cards)
+	for i := 0; i < num_jokers; i++ {
+		cards = append(cards, card)
+	}
+
+	hand.kind, _ = getKind(cards)
+
 	return hand
 }
 
-func getKind(cards []byte) int {
+func getKind(cards []byte) (int, byte) {
 
 	for _, card := range cards {
 		if bytes.Count(cards, []byte{card}) == 5 {
-			return fiveOfAKind
+			return fiveOfAKind, card
 		}
 		if bytes.Count(cards, []byte{card}) == 4 {
-			return fourOfAKind
+			return fourOfAKind, card
 		}
 		if bytes.Count(cards, []byte{card}) == 3 {
 			cardsCopy := cards
 			cardsCopy = bytes.ReplaceAll(cardsCopy, []byte{card}, []byte{})
+			if len(cardsCopy) == 0 {
+				return threeOfAKind, card
+			}
+
 			card2 := cardsCopy[0]
 			count := bytes.Count(cardsCopy, []byte{card2})
 			if count == 2 {
-				return fullHouse
+				return fullHouse, card
 			}
-			return threeOfAKind
+			return threeOfAKind, card
 		}
 		if bytes.Count(cards, []byte{card}) == 2 {
 			cardsCopy := cards
@@ -112,18 +130,18 @@ func getKind(cards []byte) int {
 				card2 := cardsCopy[0]
 				count := bytes.Count(cardsCopy, []byte{card2})
 				if count == 2 {
-					return twoPairs
+					return twoPairs, card
 				}
 				if count == 3 {
-					return fullHouse
+					return fullHouse, card2
 				}
 				cardsCopy = cardsCopy[1:]
 			}
 
-			return onePair
+			return onePair, card
 		}
 	}
-	return highCard
+	return highCard, cards[0]
 }
 
 func compareCard(card1 byte, card2 byte) (bool, bool) {
@@ -138,6 +156,6 @@ func compareCard(card1 byte, card2 byte) (bool, bool) {
 }
 
 func getCardValue(card byte) int {
-	all := "23456789TJQKA"
+	all := "J23456789TQKA"
 	return strings.Index(all, string(card)) + 2
 }
