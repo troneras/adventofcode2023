@@ -17,8 +17,8 @@ func main() {
 	for _, line := range input {
 		sequence := []int{}
 		numbs := bytes.Split(line, []byte(" "))
-		for i := len(numbs) - 1; i >= 0; i-- {
-			n, _ := strconv.Atoi(string(numbs[i]))
+		for _, numb := range numbs {
+			n, _ := strconv.Atoi(string(numb))
 			sequence = append(sequence, n)
 		}
 
