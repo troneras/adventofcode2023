@@ -16,7 +16,7 @@ type Point struct {
 var visitedNodes [][]bool
 
 func main() {
-	body, _ := os.ReadFile("test.txt")
+	body, _ := os.ReadFile("input.txt")
 	fmt.Println(string(body))
 
 	// find character "S" position in body
@@ -66,9 +66,6 @@ func main() {
 		}
 	}
 	var temp map[Point]bool
-	var q Point
-	pipe := []Point{}
-
 	steps := 1
 	for len(points) > 1 {
 		fmt.Println("step ", steps)
@@ -85,11 +82,10 @@ func main() {
 			if isValid, nextY, nextX := check(lines, square_width, square_height, x, y, startX, startY); isValid {
 				if !visitedNodes[nextY][nextX] {
 
-					q = Point{X: x, Y: y, nextX: nextX, nextY: nextY}
+					q := Point{X: x, Y: y, nextX: nextX, nextY: nextY}
 					fmt.Printf("Point %v (%d,%d), next(%d,%d)\n", string(lines[q.Y][q.X]), q.Y, q.X, q.nextY, q.nextX)
 					temp[q] = true
 					visitedNodes[y][x] = true
-					pipe = append(pipe, q)
 				}
 			} else {
 				fmt.Println("not valid ", string(lines[y][x]))
@@ -98,146 +94,11 @@ func main() {
 			// temp[p] = true
 		}
 		points = temp
-
 		fmt.Printf("\n NEXT \n")
 		steps++
 	}
 
-	visitedNodes[q.nextY][q.nextX] = true
-
 	fmt.Println(steps)
-	c := ""
-	visited := 0
-	not_visited := 0
-	for i := 0; i < square_height; i++ {
-		for j := 0; j < square_width; j++ {
-			if visitedNodes[i][j] {
-				c = "X"
-				visited++
-			} else {
-				c = string(lines[i][j])
-				if c != "." {
-					// c = "0"
-				}
-				not_visited++
-			}
-			fmt.Printf("%v", c)
-		}
-		fmt.Printf("\n")
-	}
-
-	internal := map[Point]bool{}
-	dir := false
-	for _, p := range pipe {
-		// direction
-		vX, vY := p.nextX-p.X, p.nextY-p.Y
-
-		// see if has to the right any point that is not visited
-		if vX == 0 {
-			if dir {
-				if vY > 0 && p.X-1 >= 0 {
-					// arrow pointing down right is y, x - 1
-					if visitedNodes[p.Y][p.X-1] == false {
-						p := Point{X: p.X - 1, Y: p.Y}
-						internal[p] = true
-					}
-				}
-				if vY < 0 && p.X+1 < square_width {
-					// arrow pointing up, right is y, x + 1
-					if visitedNodes[p.Y][p.X+1] == false {
-						p := Point{X: p.X + 1, Y: p.Y}
-						internal[p] = true
-					}
-				}
-			} else {
-
-				if vY < 0 && p.X-1 >= 0 {
-					// arrow pointing down right is y, x - 1
-					if visitedNodes[p.Y][p.X-1] == false {
-						p := Point{X: p.X - 1, Y: p.Y}
-						internal[p] = true
-					}
-				}
-				if vY > 0 && p.X+1 < square_width {
-					// arrow pointing up, right is y, x + 1
-					if visitedNodes[p.Y][p.X+1] == false {
-						p := Point{X: p.X + 1, Y: p.Y}
-						internal[p] = true
-					}
-				}
-			}
-		} else { // vY == 0
-			if dir {
-
-				if vX > 0 && p.Y+1 < square_height {
-					// arrow pointing right, righ is y + 1, x
-					if visitedNodes[p.Y+1][p.X] == false {
-						p := Point{X: p.X, Y: p.Y + 1}
-						internal[p] = true
-					}
-				}
-				if vX < 0 && p.Y-1 >= 0 {
-					// arrow pointing left, right is y - 1, x
-					if visitedNodes[p.Y-1][p.X] == false {
-						p := Point{X: p.X, Y: p.Y - 1}
-						internal[p] = true
-					}
-				}
-			} else {
-				if vX < 0 && p.Y+1 < square_height {
-					// arrow pointing right, righ is y + 1, x
-					if visitedNodes[p.Y+1][p.X] == false {
-						p := Point{X: p.X, Y: p.Y + 1}
-						internal[p] = true
-					}
-				}
-				if vX > 0 && p.Y-1 >= 0 {
-					// arrow pointing left, right is y - 1, x
-					if visitedNodes[p.Y-1][p.X] == false {
-						p := Point{X: p.X, Y: p.Y - 1}
-						internal[p] = true
-					}
-				}
-			}
-		}
-
-	}
-
-	for i, _ := range internal {
-		// fmt.Println(i)
-		fmt.Printf("Point %v (%d,%d)\n", string(lines[i.Y][i.X]), i.Y, i.X)
-	}
-	fmt.Println("total: ", visited+not_visited, "visited: ", visited, "internal: ", len(internal))
-
-	// out := []Point{}
-	// in := []Point{}
-
-	// for not_visited > 0 {
-	// 	// find one not visited
-	// 	var p Point
-	// 	for i := 0; i < square_height; i++ {
-	// 		for j := 0; j < square_width; j++ {
-	// 			if visitedNodes[i][j] == false {
-	// 				p := Point{X: j, Y: i, nextX: 0, nextY: 0}
-	// 				break
-	// 			}
-	// 		}
-	// 		// check if it's an external point
-	// 		if p.X == 0 || p.Y == 0 {
-	// 			out = append(out, Point{X: p.X, Y: p.Y})
-
-	// 			for y := p.Y - 1; y <= p.Y; y++ {
-	// 				for x := p.X - 1; x <= p.X+1; x++ {
-	// 					if x < 0 || y < 0 || x >= square_width || y >= square_height || visitedNodes[y][x] {
-	// 						continue
-	// 					}
-	// 					out = append(out, Point{X: x, Y: y})
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
-
 }
 
 func check(lines []string, square_width, square_height, x, y, startX, startY int) (bool, int, int) {
